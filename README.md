@@ -116,9 +116,6 @@ interest_from = outlay × from_interest
 profit = interest_to − interest_from
 ```
 
-✅ Fees are **only counted once** via `outlay`
-❌ No double subtraction
-
 ---
 
 ## 📊 Chart Interpretation
