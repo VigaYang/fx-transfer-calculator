@@ -73,7 +73,7 @@ function updateChart() {
         ]
     };
 
-    chart.setOption(option, true); // <-- IMPORTANT: force full update
+    chart.setOption(option, true);
 }
 
 updateChart();
