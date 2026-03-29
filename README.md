@@ -10,9 +10,10 @@ Given a transfer from one country (source currency) to another (destination curr
 
 * Foreign exchange (FX) conversion costs
 * Transfer service fees
+* Receiving bank fees in the destination country
 * Opportunity cost of leaving funds in the original country
 
-All inputs are fully adjustable, allowing users to model different financial scenarios.
+All inputs are fully adjustable, allowing users to model different financial scenarios across any currency pair.
 
 ---
 
@@ -22,7 +23,11 @@ All inputs are fully adjustable, allowing users to model different financial sce
 * 🔍 Automatic breakeven point detection
 * 🎯 Target transfer amount analysis
 * 📊 Multiple fee regimes (min / linear / max fee)
-* 🌐 Generalized for any currency pair (From → To)
+* 🌐 Generalised for any currency pair (From → To)
+* 💸 Separate handling of:
+
+  * Transfer fees (source currency)
+  * Receiving bank fees (destination currency)
 * ⚡ Real-time updates as inputs change
 
 ---
@@ -36,12 +41,18 @@ The calculator assumes:
 3. Funds are deposited and earn interest in the destination country
 4. Profit is compared against leaving funds in the source country
 
-### Profit Formula (simplified)
+### Profit Formula (conceptual)
 
 Profit =
-**Interest earned in destination**
+**Interest earned in destination (converted back)**
 − **Interest foregone in source country**
-− **Transfer and service fees**
+− **All transfer-related fees**
+
+### Fee Structure
+
+* Service fee (percentage, with min/max caps)
+* Fixed transfer fee (source side)
+* Receiving bank fee (destination side, converted via FX)
 
 ---
 
@@ -53,20 +64,25 @@ Profit =
 
 ## 🖥️ How to Use
 
-1. Input:
+1. Enter:
 
    * FX rate (From → To)
    * Interest rates for both countries
-   * Transfer fees and caps
+   * Service fee parameters (rate, min, max)
+   * Fixed transfer fee (source currency)
+   * Receiving bank fee (destination currency)
+
 2. Adjust:
 
    * Maximum transfer range
+   * X-axis tick spacing
    * Target transfer amount
-3. View:
+
+3. Analyse:
 
    * Profit curve
    * Breakeven point(s)
-   * Target point profitability
+   * Profitability at your target amount
 
 ---
 
@@ -74,7 +90,7 @@ Profit =
 
 Clone the repository:
 
-```bash
+```bash id="k2e1w3"
 git clone https://github.com/VigaYang/fx-profit-calculator.git
 ```
 
@@ -102,7 +118,7 @@ https://VigaYang.github.io/fx-profit-calculator/
 * Cross-border savings decisions
 * FX transfer optimisation
 * Expat financial planning
-* Comparing international interest rates
+* Comparing international interest rate advantages
 
 ---
 
@@ -118,17 +134,24 @@ Actual outcomes may vary depending on market conditions, taxes, and provider-spe
 * Live FX rate integration (API)
 * Auto-filled interest rates by country
 * Provider comparison (Wise, Revolut, etc.)
-* Decision recommendations (“Transfer or not?”)
+* Decision recommendation (“Transfer or not?”)
+* Cost breakdown panel (fees vs interest impact)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome!
-Feel free to open issues or submit pull requests.
+Contributions are welcome for non-commercial purposes.
+Please open issues or submit pull requests.
 
 ---
 
 ## 📄 License
 
-MIT License
+This project is licensed under a **Non-Commercial License**.
+
+You are free to use, modify, and share this project for personal and educational purposes.
+
+**Commercial use is strictly prohibited without prior written permission from the author.**
+
+See the [LICENSE](./LICENSE) file for full details.
