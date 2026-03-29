@@ -1,36 +1,38 @@
 const chart = echarts.init(document.getElementById("chart"));
 
-function netGainForGBP(G, p) {
-    const G_sent = G + p.uk_fee;
-    const fx_cost = G_sent * p.fx_rate;
+function netGainForAmount(amountToCurrency, p) {
+    const amount_sent = amountToCurrency + p.fixed_fee;
+    const fx_cost = amount_sent * p.fx_rate;
 
-    const raw_fee = p.service_rate * fx_cost;
-    const service_fee = Math.min(Math.max(raw_fee, p.min_cap), p.max_cap);
+    const raw_service_fee = p.service_rate * fx_cost;
+    const service_fee = Math.min(Math.max(raw_service_fee, p.min_cap), p.max_cap);
 
-    const fees_cn = service_fee + 150;
-    const outlay = fx_cost + fees_cn;
+    const total_fees = service_fee + p.fixed_fee;
+    const outlay = fx_cost + total_fees;
 
-    const interest_uk = G * p.fx_rate * p.uk_interest;
-    const interest_cn = outlay * p.china_interest;
+    const interest_to = amountToCurrency * p.fx_rate * p.to_interest;
+    const interest_from = outlay * p.from_interest;
 
     return {
-        profit: interest_uk - interest_cn - fees_cn,
-        raw_fee: raw_fee
+        profit: interest_to - interest_from - total_fees,
+        raw_service_fee: raw_service_fee
     };
 }
 
 function getParams() {
     return {
+        from_country: document.getElementById("from_country").value.trim() || "From Country",
+        to_country: document.getElementById("to_country").value.trim() || "To Country",
         fx_rate: parseFloat(document.getElementById("fx_rate").value) || 0,
-        china_interest: parseFloat(document.getElementById("china_interest").value) || 0,
-        uk_interest: parseFloat(document.getElementById("uk_interest").value) || 0,
+        from_interest: parseFloat(document.getElementById("from_interest").value) || 0,
+        to_interest: parseFloat(document.getElementById("to_interest").value) || 0,
         service_rate: parseFloat(document.getElementById("service_rate").value) || 0,
         min_cap: parseFloat(document.getElementById("min_cap").value) || 0,
         max_cap: parseFloat(document.getElementById("max_cap").value) || 0,
-        uk_fee: parseFloat(document.getElementById("uk_fee").value) || 0,
-        max_gbp: parseFloat(document.getElementById("max_gbp").value) || 100000,
+        fixed_fee: parseFloat(document.getElementById("fixed_fee").value) || 0,
+        max_amount: parseFloat(document.getElementById("max_amount").value) || 100000,
         x_tick_step: parseFloat(document.getElementById("x_tick_step").value) || 5000,
-        target_gbp: parseFloat(document.getElementById("target_gbp").value) || 0
+        target_amount: parseFloat(document.getElementById("target_amount").value) || 0
     };
 }
 
@@ -40,22 +42,22 @@ function buildSeriesData(p) {
     const maxCapData = [];
     const allData = [];
 
-    for (let G = 0; G <= p.max_gbp; G += 200) {
-        const result = netGainForGBP(G, p);
-        allData.push([G, result.profit]);
+    for (let amount = 0; amount <= p.max_amount; amount += 200) {
+        const result = netGainForAmount(amount, p);
+        allData.push([amount, result.profit]);
 
-        if (result.raw_fee < p.min_cap) {
-            minCapData.push([G, result.profit]);
-            linearData.push([G, null]);
-            maxCapData.push([G, null]);
-        } else if (result.raw_fee > p.max_cap) {
-            minCapData.push([G, null]);
-            linearData.push([G, null]);
-            maxCapData.push([G, result.profit]);
+        if (result.raw_service_fee < p.min_cap) {
+            minCapData.push([amount, result.profit]);
+            linearData.push([amount, null]);
+            maxCapData.push([amount, null]);
+        } else if (result.raw_service_fee > p.max_cap) {
+            minCapData.push([amount, null]);
+            linearData.push([amount, null]);
+            maxCapData.push([amount, result.profit]);
         } else {
-            minCapData.push([G, null]);
-            linearData.push([G, result.profit]);
-            maxCapData.push([G, null]);
+            minCapData.push([amount, null]);
+            linearData.push([amount, result.profit]);
+            maxCapData.push([amount, null]);
         }
     }
 
@@ -94,11 +96,14 @@ function updateChart() {
         value: pt
     }));
 
-    const targetProfit = netGainForGBP(p.target_gbp, p).profit;
+    const targetProfit = netGainForAmount(p.target_amount, p).profit;
     const targetPoint =
-        p.target_gbp > 0 && p.target_gbp <= p.max_gbp
-            ? [{ value: [p.target_gbp, targetProfit] }]
+        p.target_amount > 0 && p.target_amount <= p.max_amount
+            ? [{ value: [p.target_amount, targetProfit] }]
             : [];
+
+    const fromCountry = p.from_country;
+    const toCountry = p.to_country;
 
     const option = {
         tooltip: {
@@ -115,39 +120,39 @@ function updateChart() {
                 const [x, y] = pnt.data;
                 return `
                     ${pnt.seriesName}<br>
-                    GBP: ${Number(x).toFixed(0)}<br>
-                    Profit: ${Number(y).toFixed(2)} RMB
+                    Amount: ${Number(x).toFixed(0)}<br>
+                    Profit: ${Number(y).toFixed(2)}
                 `;
             }
         },
         xAxis: {
             type: "value",
-            name: "GBP",
+            name: `Amount (${toCountry})`,
             min: 0,
-            max: p.max_gbp,
+            max: p.max_amount,
             interval: p.x_tick_step
         },
         yAxis: {
             type: "value",
-            name: "Profit (RMB)"
+            name: `Profit (${fromCountry} equivalent)`
         },
         series: [
             {
-                name: "Min cap (50 RMB)",
+                name: "Min fee regime",
                 type: "line",
                 showSymbol: false,
                 connectNulls: false,
                 data: minCapData
             },
             {
-                name: "Linear 0.1% fee",
+                name: "Linear fee regime",
                 type: "line",
                 showSymbol: false,
                 connectNulls: false,
                 data: linearData
             },
             {
-                name: "Max cap (260 RMB)",
+                name: "Max fee regime",
                 type: "line",
                 showSymbol: false,
                 connectNulls: false,
@@ -163,12 +168,12 @@ function updateChart() {
                     show: true,
                     position: "top",
                     formatter: function (params) {
-                        return `Breakeven\nGBP: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)} RMB`;
+                        return `Breakeven\nAmount: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)}`;
                     }
                 }
             },
             {
-                name: "Target GBP",
+                name: "Target Amount",
                 type: "scatter",
                 symbolSize: 12,
                 data: targetPoint,
@@ -177,7 +182,7 @@ function updateChart() {
                     show: true,
                     position: "top",
                     formatter: function (params) {
-                        return `Target\nGBP: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)} RMB`;
+                        return `Target\nAmount: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)}`;
                     }
                 },
                 markLine: {
@@ -190,12 +195,12 @@ function updateChart() {
                     label: {
                         show: true,
                         formatter: function () {
-                            return `Target x = ${Number(p.target_gbp).toFixed(0)} GBP`;
+                            return `Target Amount = ${Number(p.target_amount).toFixed(0)}`;
                         }
                     },
                     data: [
                         {
-                            xAxis: p.target_gbp
+                            xAxis: p.target_amount
                         }
                     ]
                 }
