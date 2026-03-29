@@ -85,6 +85,8 @@ document.querySelectorAll("input").forEach(input => {
     input.addEventListener("input", updateChart);
 });
 
+document.getElementById("updateBtn").addEventListener("click", updateChart);
+
 window.addEventListener("resize", () => chart.resize());
 
 updateChart();
