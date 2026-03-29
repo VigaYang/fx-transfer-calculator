@@ -2,57 +2,141 @@
 
 A web-based interactive tool to evaluate whether transferring money between countries is financially beneficial after accounting for exchange rates, fees, and interest rates.
 
+---
+
 ## 🌍 Overview
 
-This project helps users compare the potential returns of holding money in different countries.
+This tool helps users compare the financial outcome of transferring money from one country (**source currency**) to another (**destination currency**).
 
-Given a transfer from one country (source currency) to another (destination currency), the calculator estimates whether the additional interest earned abroad outweighs:
+It estimates whether the additional interest earned abroad outweighs:
 
 * Foreign exchange (FX) conversion costs
-* Transfer service fees
+* Transfer and service fees
 * Receiving bank fees in the destination country
-* Opportunity cost of leaving funds in the original country
+* Opportunity cost of leaving funds in the source country
 
-All inputs are fully adjustable, allowing users to model different financial scenarios across any currency pair.
+All inputs are adjustable, making the tool applicable to any currency pair.
 
 ---
 
 ## ⚙️ Features
 
-* 📈 Interactive profit curve visualization (ECharts)
+* 📈 Interactive profit curve (ECharts)
 * 🔍 Automatic breakeven point detection
-* 🎯 Target transfer amount analysis
-* 📊 Multiple fee regimes (min / linear / max fee)
-* 🌐 Generalised for any currency pair (From → To)
-* 💸 Separate handling of:
+* 🎯 Target amount profitability analysis
+* 📊 Fee structure modeling:
 
-  * Transfer fees (source currency)
-  * Receiving bank fees (destination currency)
-* ⚡ Real-time updates as inputs change
+  * Percentage service fee (with min/max caps)
+  * Fixed transfer fee (source side)
+  * Receiving bank fee (destination side)
+* 🌐 Generalised for any **From → To** currency scenario
+* ⚡ Real-time updates on input changes
 
 ---
 
 ## 🧮 Model Logic
 
-The calculator assumes:
+The calculation is implemented in:
 
-1. Funds start in the **source country (From currency)**
-2. Money is converted via FX into the **destination currency (To currency)**
-3. Funds are deposited and earn interest in the destination country
-4. Profit is compared against leaving funds in the source country
+```javascript
+function netGainForAmount(amountToCurrency, p)
+```
 
-### Profit Formula (conceptual)
+### Key Assumptions
 
-Profit =
-**Interest earned in destination (converted back)**
-− **Interest foregone in source country**
-− **All transfer-related fees**
+1. You start with funds in the **source currency**
+2. You convert to the **destination currency**
+3. You earn interest in the destination country
+4. Results are expressed in **source-currency equivalent**
 
-### Fee Structure
+---
 
-* Service fee (percentage, with min/max caps)
-* Fixed transfer fee (source side)
-* Receiving bank fee (destination side, converted via FX)
+### Step-by-step Calculation
+
+#### 1. FX Conversion Cost
+
+```text
+fx_cost = amountToCurrency × fx_rate
+```
+
+---
+
+#### 2. Service Fee (with caps)
+
+```text
+raw_fee = service_rate × fx_cost
+service_fee = bounded by [min_cap, max_cap]
+```
+
+---
+
+#### 3. Receiving Bank Fee (converted)
+
+```text
+to_fee_in_from = to_fee × fx_rate
+```
+
+---
+
+#### 4. Total Fees
+
+```text
+total_fees = service_fee + fixed_fee + to_fee_in_from
+```
+
+---
+
+#### 5. Total Outlay (source currency)
+
+```text
+outlay = fx_cost + total_fees
+```
+
+---
+
+#### 6. Interest Earned in Destination
+
+```text
+interest_to = amountToCurrency × to_interest × fx_rate
+```
+
+---
+
+#### 7. Interest if Funds Stayed in Source Country
+
+```text
+interest_from = outlay × from_interest
+```
+
+---
+
+#### 8. Final Profit
+
+```text
+profit = interest_to − interest_from
+```
+
+✅ Fees are **only counted once** via `outlay`
+❌ No double subtraction
+
+---
+
+## 📊 Chart Interpretation
+
+* **X-axis**: Amount in destination currency
+* **Y-axis**: Profit (in source currency equivalent)
+
+### Lines
+
+* Min fee regime
+* Linear fee regime
+* Max fee regime
+
+### Markers
+
+* **Breakeven points** → where profit = 0
+* **Target amount** → user-defined scenario
+* **Vertical line** → highlights target amount
 
 ---
 
@@ -64,17 +148,17 @@ Profit =
 
 ## 🖥️ How to Use
 
-1. Enter:
+1. Input:
 
    * FX rate (From → To)
-   * Interest rates for both countries
+   * Interest rates (source and destination)
    * Service fee parameters (rate, min, max)
    * Fixed transfer fee (source currency)
    * Receiving bank fee (destination currency)
 
 2. Adjust:
 
-   * Maximum transfer range
+   * Maximum amount range
    * X-axis tick spacing
    * Target transfer amount
 
@@ -82,15 +166,13 @@ Profit =
 
    * Profit curve
    * Breakeven point(s)
-   * Profitability at your target amount
+   * Profit at your target amount
 
 ---
 
 ## 📦 Installation
 
-Clone the repository:
-
-```bash id="k2e1w3"
+```bash
 git clone https://github.com/VigaYang/fx-profit-calculator.git
 ```
 
@@ -118,7 +200,7 @@ https://VigaYang.github.io/fx-profit-calculator/
 * Cross-border savings decisions
 * FX transfer optimisation
 * Expat financial planning
-* Comparing international interest rate advantages
+* Comparing international interest advantages
 
 ---
 
@@ -133,8 +215,8 @@ Actual outcomes may vary depending on market conditions, taxes, and provider-spe
 
 * Live FX rate integration (API)
 * Auto-filled interest rates by country
-* Provider comparison (Wise, Revolut, etc.)
-* Decision recommendation (“Transfer or not?”)
+* Transfer provider comparison (Wise, Revolut, etc.)
+* Decision recommendation (e.g. “Transfer above X amount”)
 * Cost breakdown panel (fees vs interest impact)
 
 ---
