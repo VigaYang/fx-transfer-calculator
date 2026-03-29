@@ -140,6 +140,7 @@ profit = interest_to − interest_from
 ## 🚀 Live Demo
 
 👉 https://VigaYang.github.io/fx-profit-calculator/
+
 Another channel: https://fx-profit-calculator.vercel.app/
 
 ---
