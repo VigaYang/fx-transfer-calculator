@@ -56,25 +56,24 @@ function updateChart() {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                const p = params.find(x => x.value !== null);
-                const regime = p.seriesName;
+                const pnt = params.find(x => x.value !== null);
                 return `
-                    GBP: ${p.axisValue}<br>
-                    Profit: ${p.value.toFixed(2)} RMB<br>
-                    Fee regime: ${regime}
+                    GBP: ${pnt.axisValue}<br>
+                    Profit: ${pnt.value.toFixed(2)} RMB<br>
+                    Fee regime: ${pnt.seriesName}
                 `;
             }
         },
         xAxis: { type: 'category', data: G_values, name: 'GBP Received' },
         yAxis: { type: 'value', name: 'Profit (RMB)' },
         series: [
-            { name: 'Min cap (50 RMB)', type: 'line', data: green, color: 'green' },
-            { name: 'Linear 0.1% fee', type: 'line', data: blue, color: 'blue' },
-            { name: 'Max cap (260 RMB)', type: 'line', data: brown, color: 'brown' }
+            { name: 'Min cap (50 RMB)', type: 'line', data: green, color: 'green', connectNulls: false },
+            { name: 'Linear 0.1% fee', type: 'line', data: blue, color: 'blue', connectNulls: false },
+            { name: 'Max cap (260 RMB)', type: 'line', data: brown, color: 'brown', connectNulls: false }
         ]
     };
 
-    chart.setOption(option);
+    chart.setOption(option, true); // <-- IMPORTANT: force full update
 }
 
 updateChart();
