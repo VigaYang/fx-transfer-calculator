@@ -91,21 +91,25 @@ function updateChart() {
     const { minCapData, linearData, maxCapData, allData } = buildSeriesData(p);
 
     const breakEvenPoints = findBreakEvenPoints(allData).map(pt => ({
-        value: pt,
-        name: "Breakeven"
+        value: pt
     }));
 
     const targetProfit = netGainForGBP(p.target_gbp, p).profit;
     const targetPoint =
         p.target_gbp > 0 && p.target_gbp <= p.max_gbp
-            ? [{ value: [p.target_gbp, targetProfit], name: "Target GBP" }]
+            ? [{ value: [p.target_gbp, targetProfit] }]
             : [];
 
     const option = {
         tooltip: {
             trigger: "axis",
+            axisPointer: {
+                type: "line"
+            },
             formatter: function (params) {
-                const pnt = params.find(x => x.data && x.data[1] !== null && x.data[1] !== undefined);
+                const pnt = params.find(
+                    x => x.data && x.data[1] !== null && x.data[1] !== undefined
+                );
                 if (!pnt) return "";
 
                 const [x, y] = pnt.data;
@@ -152,16 +156,49 @@ function updateChart() {
             {
                 name: "Breakeven",
                 type: "scatter",
-                symbolSize: 10,
+                symbolSize: 12,
                 data: breakEvenPoints,
-                z: 10
+                z: 10,
+                label: {
+                    show: true,
+                    position: "top",
+                    formatter: function (params) {
+                        return `Breakeven\nGBP: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)} RMB`;
+                    }
+                }
             },
             {
                 name: "Target GBP",
                 type: "scatter",
                 symbolSize: 12,
                 data: targetPoint,
-                z: 10
+                z: 10,
+                label: {
+                    show: true,
+                    position: "top",
+                    formatter: function (params) {
+                        return `Target\nGBP: ${Number(params.value[0]).toFixed(0)}\nProfit: ${Number(params.value[1]).toFixed(2)} RMB`;
+                    }
+                },
+                markLine: {
+                    silent: true,
+                    symbol: ["none", "none"],
+                    lineStyle: {
+                        type: "dashed",
+                        width: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: function () {
+                            return `Target x = ${Number(p.target_gbp).toFixed(0)} GBP`;
+                        }
+                    },
+                    data: [
+                        {
+                            xAxis: p.target_gbp
+                        }
+                    ]
+                }
             }
         ]
     };
