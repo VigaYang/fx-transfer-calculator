@@ -1,6 +1,8 @@
+const chart = echarts.init(document.getElementById("chart"));
+
 function netGainForGBP(G, p) {
     const G_sent = G + p.uk_fee;
-    const fx_cost = p.fx_rate * G_sent;
+    const fx_cost = G_sent * p.fx_rate;
 
     const raw_fee = p.service_rate * fx_cost;
     const service_fee = Math.min(Math.max(raw_fee, p.min_cap), p.max_cap);
@@ -17,16 +19,20 @@ function netGainForGBP(G, p) {
     };
 }
 
-function updateChart() {
-    const p = {
-        fx_rate: parseFloat(document.getElementById("fx_rate").value),
-        china_interest: parseFloat(document.getElementById("china_interest").value),
-        uk_interest: parseFloat(document.getElementById("uk_interest").value),
-        service_rate: parseFloat(document.getElementById("service_rate").value),
-        min_cap: parseFloat(document.getElementById("min_cap").value),
-        max_cap: parseFloat(document.getElementById("max_cap").value),
-        uk_fee: parseFloat(document.getElementById("uk_fee").value)
+function getParams() {
+    return {
+        fx_rate: parseFloat(document.getElementById("fx_rate").value) || 0,
+        china_interest: parseFloat(document.getElementById("china_interest").value) || 0,
+        uk_interest: parseFloat(document.getElementById("uk_interest").value) || 0,
+        service_rate: parseFloat(document.getElementById("service_rate").value) || 0,
+        min_cap: parseFloat(document.getElementById("min_cap").value) || 0,
+        max_cap: parseFloat(document.getElementById("max_cap").value) || 0,
+        uk_fee: parseFloat(document.getElementById("uk_fee").value) || 0
     };
+}
+
+function updateChart() {
+    const p = getParams();
 
     const G_values = [];
     const green = [], blue = [], brown = [];
@@ -50,16 +56,15 @@ function updateChart() {
         }
     }
 
-    const chart = echarts.init(document.getElementById("chart"));
-
     const option = {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
                 const pnt = params.find(x => x.value !== null);
+                if (!pnt) return '';
                 return `
                     GBP: ${pnt.axisValue}<br>
-                    Profit: ${pnt.value.toFixed(2)} RMB<br>
+                    Profit: ${Number(pnt.value).toFixed(2)} RMB<br>
                     Fee regime: ${pnt.seriesName}
                 `;
             }
@@ -67,13 +72,19 @@ function updateChart() {
         xAxis: { type: 'category', data: G_values, name: 'GBP Received' },
         yAxis: { type: 'value', name: 'Profit (RMB)' },
         series: [
-            { name: 'Min cap (50 RMB)', type: 'line', data: green, color: 'green', connectNulls: false },
-            { name: 'Linear 0.1% fee', type: 'line', data: blue, color: 'blue', connectNulls: false },
-            { name: 'Max cap (260 RMB)', type: 'line', data: brown, color: 'brown', connectNulls: false }
+            { name: 'Min cap (50 RMB)', type: 'line', data: green, connectNulls: false },
+            { name: 'Linear 0.1% fee', type: 'line', data: blue, connectNulls: false },
+            { name: 'Max cap (260 RMB)', type: 'line', data: brown, connectNulls: false }
         ]
     };
 
     chart.setOption(option, true);
 }
+
+document.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", updateChart);
+});
+
+window.addEventListener("resize", () => chart.resize());
 
 updateChart();
