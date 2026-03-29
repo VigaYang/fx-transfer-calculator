@@ -13,7 +13,7 @@
     <div class="page">
         <h1>FX Transfer Profit Calculator</h1>
         <p class="subtitle">
-            Compare whether moving money from one country to another is profitable after FX, fees, and interest.
+            Compare whether transferring money between countries is profitable after FX, fees, and interest.
         </p>
 
         <div class="input-panel">
@@ -53,6 +53,10 @@
                 <input id="fixed_fee" type="number" value="150">
             </label>
 
+            <label>Receiving Bank Fee (To currency):
+                <input id="to_fee" type="number" value="20">
+            </label>
+
             <label>Max X Value:
                 <input id="max_amount" type="number" value="100000">
             </label>
@@ -63,10 +67,6 @@
 
             <label>Target Amount:
                 <input id="target_amount" type="number" value="20000">
-            </label>
-
-            <label>Receiving Bank Fee (To currency):
-                <input id="to_fee" type="number" value="20">
             </label>
 
             <button id="updateBtn">Update Chart</button>
