@@ -7,7 +7,10 @@ function netGainForAmount(amountToCurrency, p) {
     const raw_service_fee = p.service_rate * fx_cost;
     const service_fee = Math.min(Math.max(raw_service_fee, p.min_cap), p.max_cap);
 
-    const total_fees = service_fee + p.fixed_fee;
+    // Convert receiving bank fee from "To" currency into "From" currency
+    const to_fee_in_from = p.to_fee * p.fx_rate;
+
+    const total_fees = service_fee + p.fixed_fee + to_fee_in_from;
     const outlay = fx_cost + total_fees;
 
     const interest_to = amountToCurrency * p.fx_rate * p.to_interest;
@@ -30,6 +33,7 @@ function getParams() {
         min_cap: parseFloat(document.getElementById("min_cap").value) || 0,
         max_cap: parseFloat(document.getElementById("max_cap").value) || 0,
         fixed_fee: parseFloat(document.getElementById("fixed_fee").value) || 0,
+        to_fee: parseFloat(document.getElementById("to_fee").value) || 0,
         max_amount: parseFloat(document.getElementById("max_amount").value) || 100000,
         x_tick_step: parseFloat(document.getElementById("x_tick_step").value) || 5000,
         target_amount: parseFloat(document.getElementById("target_amount").value) || 0
