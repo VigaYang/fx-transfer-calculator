@@ -27,54 +27,142 @@ function getParams() {
         service_rate: parseFloat(document.getElementById("service_rate").value) || 0,
         min_cap: parseFloat(document.getElementById("min_cap").value) || 0,
         max_cap: parseFloat(document.getElementById("max_cap").value) || 0,
-        uk_fee: parseFloat(document.getElementById("uk_fee").value) || 0
+        uk_fee: parseFloat(document.getElementById("uk_fee").value) || 0,
+        max_gbp: parseFloat(document.getElementById("max_gbp").value) || 100000,
+        x_tick_step: parseFloat(document.getElementById("x_tick_step").value) || 5000,
+        target_gbp: parseFloat(document.getElementById("target_gbp").value) || 0
     };
+}
+
+function buildSeriesData(p) {
+    const minCapData = [];
+    const linearData = [];
+    const maxCapData = [];
+    const allData = [];
+
+    for (let G = 0; G <= p.max_gbp; G += 200) {
+        const result = netGainForGBP(G, p);
+        allData.push([G, result.profit]);
+
+        if (result.raw_fee < p.min_cap) {
+            minCapData.push([G, result.profit]);
+            linearData.push([G, null]);
+            maxCapData.push([G, null]);
+        } else if (result.raw_fee > p.max_cap) {
+            minCapData.push([G, null]);
+            linearData.push([G, null]);
+            maxCapData.push([G, result.profit]);
+        } else {
+            minCapData.push([G, null]);
+            linearData.push([G, result.profit]);
+            maxCapData.push([G, null]);
+        }
+    }
+
+    return { minCapData, linearData, maxCapData, allData };
+}
+
+function findBreakEvenPoints(allData) {
+    const points = [];
+
+    for (let i = 1; i < allData.length; i++) {
+        const [x0, y0] = allData[i - 1];
+        const [x1, y1] = allData[i];
+
+        if (y0 === 0) {
+            points.push([x0, 0]);
+        }
+
+        if (y0 === 0 || y1 === 0) {
+            continue;
+        }
+
+        if (y0 * y1 < 0) {
+            const x = x0 + (0 - y0) * (x1 - x0) / (y1 - y0);
+            points.push([x, 0]);
+        }
+    }
+
+    return points;
 }
 
 function updateChart() {
     const p = getParams();
+    const { minCapData, linearData, maxCapData, allData } = buildSeriesData(p);
 
-    const G_values = [];
-    const green = [], blue = [], brown = [];
+    const breakEvenPoints = findBreakEvenPoints(allData).map(pt => ({
+        value: pt,
+        name: "Breakeven"
+    }));
 
-    for (let G = 0; G <= 100000; G += 200) {
-        const result = netGainForGBP(G, p);
-        G_values.push(G);
-
-        if (result.raw_fee < p.min_cap) {
-            green.push(result.profit);
-            blue.push(null);
-            brown.push(null);
-        } else if (result.raw_fee > p.max_cap) {
-            green.push(null);
-            blue.push(null);
-            brown.push(result.profit);
-        } else {
-            green.push(null);
-            blue.push(result.profit);
-            brown.push(null);
-        }
-    }
+    const targetProfit = netGainForGBP(p.target_gbp, p).profit;
+    const targetPoint =
+        p.target_gbp > 0 && p.target_gbp <= p.max_gbp
+            ? [{ value: [p.target_gbp, targetProfit], name: "Target GBP" }]
+            : [];
 
     const option = {
         tooltip: {
-            trigger: 'axis',
+            trigger: "axis",
             formatter: function (params) {
-                const pnt = params.find(x => x.value !== null);
-                if (!pnt) return '';
+                const pnt = params.find(x => x.data && x.data[1] !== null && x.data[1] !== undefined);
+                if (!pnt) return "";
+
+                const [x, y] = pnt.data;
                 return `
-                    GBP: ${pnt.axisValue}<br>
-                    Profit: ${Number(pnt.value).toFixed(2)} RMB<br>
-                    Fee regime: ${pnt.seriesName}
+                    ${pnt.seriesName}<br>
+                    GBP: ${Number(x).toFixed(0)}<br>
+                    Profit: ${Number(y).toFixed(2)} RMB
                 `;
             }
         },
-        xAxis: { type: 'category', data: G_values, name: 'GBP Received' },
-        yAxis: { type: 'value', name: 'Profit (RMB)' },
+        xAxis: {
+            type: "value",
+            name: "GBP",
+            min: 0,
+            max: p.max_gbp,
+            interval: p.x_tick_step
+        },
+        yAxis: {
+            type: "value",
+            name: "Profit (RMB)"
+        },
         series: [
-            { name: 'Min cap (50 RMB)', type: 'line', data: green, connectNulls: false },
-            { name: 'Linear 0.1% fee', type: 'line', data: blue, connectNulls: false },
-            { name: 'Max cap (260 RMB)', type: 'line', data: brown, connectNulls: false }
+            {
+                name: "Min cap (50 RMB)",
+                type: "line",
+                showSymbol: false,
+                connectNulls: false,
+                data: minCapData
+            },
+            {
+                name: "Linear 0.1% fee",
+                type: "line",
+                showSymbol: false,
+                connectNulls: false,
+                data: linearData
+            },
+            {
+                name: "Max cap (260 RMB)",
+                type: "line",
+                showSymbol: false,
+                connectNulls: false,
+                data: maxCapData
+            },
+            {
+                name: "Breakeven",
+                type: "scatter",
+                symbolSize: 10,
+                data: breakEvenPoints,
+                z: 10
+            },
+            {
+                name: "Target GBP",
+                type: "scatter",
+                symbolSize: 12,
+                data: targetPoint,
+                z: 10
+            }
         ]
     };
 
