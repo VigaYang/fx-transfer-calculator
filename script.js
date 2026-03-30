@@ -1,23 +1,30 @@
 const chart = echarts.init(document.getElementById("chart"));
 
 function netGainForAmount(amountToCurrency, p) {
-    const amount_sent = amountToCurrency + p.fixed_fee;
-    const fx_cost = amount_sent * p.fx_rate;
+    // FX cost to acquire the destination-currency amount
+    const fx_cost = amountToCurrency * p.fx_rate;
 
+    // Percentage service fee based on FX cost, with min/max caps
     const raw_service_fee = p.service_rate * fx_cost;
     const service_fee = Math.min(Math.max(raw_service_fee, p.min_cap), p.max_cap);
 
-    // Convert receiving bank fee from "To" currency into "From" currency
+    // Receiving bank fee in destination currency, converted into source currency
     const to_fee_in_from = p.to_fee * p.fx_rate;
 
+    // Total fees in source-currency equivalent
     const total_fees = service_fee + p.fixed_fee + to_fee_in_from;
+
+    // Total source-currency outlay
     const outlay = fx_cost + total_fees;
 
-    const interest_to = amountToCurrency * p.fx_rate * p.to_interest;
+    // Interest earned in destination, converted back to source currency equivalent
+    const interest_to = amountToCurrency * p.to_interest * p.fx_rate;
+
+    // Interest that would have been earned if the same source-currency outlay stayed at home
     const interest_from = outlay * p.from_interest;
 
     return {
-        profit: interest_to - interest_from - total_fees,
+        profit: interest_to - interest_from,
         raw_service_fee: raw_service_fee
     };
 }
