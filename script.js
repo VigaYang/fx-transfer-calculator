@@ -1,5 +1,19 @@
 const chart = echarts.init(document.getElementById("chart"));
 
+function formatAmount(n) {
+    if (!Number.isFinite(n)) return "-";
+    return Number(n).toLocaleString(undefined, {
+        maximumFractionDigits: 2
+    });
+}
+
+function setSummaryStatus(text, type) {
+    const statusEl = document.getElementById("summaryStatus");
+    statusEl.textContent = text;
+    statusEl.classList.remove("positive", "negative", "neutral");
+    statusEl.classList.add(type);
+}
+
 function netGainForAmount(amountToCurrency, p) {
     // FX cost to acquire the destination-currency amount
     const fx_cost = amountToCurrency * p.fx_rate;
@@ -99,19 +113,63 @@ function findBreakEvenPoints(allData) {
     return points;
 }
 
+function updateSummary(p, breakEvenPoints, targetProfit) {
+    const targetAmountEl = document.getElementById("summaryTargetAmount");
+    const targetProfitEl = document.getElementById("summaryTargetProfit");
+    const breakevenEl = document.getElementById("summaryBreakeven");
+    const noteEl = document.getElementById("summaryNote");
+
+    targetAmountEl.textContent = `${formatAmount(p.target_amount)} (${p.to_country})`;
+
+    if (p.target_amount <= 0) {
+        targetProfitEl.textContent = "-";
+        setSummaryStatus("Enter a target amount", "neutral");
+        breakevenEl.textContent = breakEvenPoints.length
+            ? `${formatAmount(breakEvenPoints[0][0])} (${p.to_country})`
+            : "None in range";
+        noteEl.textContent = "Target amount is not set.";
+        return;
+    }
+
+    targetProfitEl.textContent = `${formatAmount(targetProfit)} (${p.from_country} equiv.)`;
+
+    if (targetProfit > 0) {
+        setSummaryStatus("Profitable", "positive");
+    } else if (targetProfit < 0) {
+        setSummaryStatus("Not profitable", "negative");
+    } else {
+        setSummaryStatus("Breakeven", "neutral");
+    }
+
+    if (breakEvenPoints.length > 0) {
+        const [x, y] = breakEvenPoints[0];
+        breakevenEl.textContent = `${formatAmount(x)} (${p.to_country}), ${formatAmount(y)}`;
+        noteEl.textContent = `First breakeven point found within the plotted range.`;
+    } else {
+        breakevenEl.textContent = "None in range";
+        noteEl.textContent = `No breakeven point found within the plotted range.`;
+    }
+}
+
 function updateChart() {
     const p = getParams();
     const { minCapData, linearData, maxCapData, allData } = buildSeriesData(p);
 
-    const breakEvenPoints = findBreakEvenPoints(allData).map(pt => ({
+    const breakEvenPointsRaw = findBreakEvenPoints(allData);
+    const breakEvenPoints = breakEvenPointsRaw.map(pt => ({
         value: pt
     }));
 
-    const targetProfit = netGainForAmount(p.target_amount, p).profit;
+    const targetProfit = p.target_amount > 0
+        ? netGainForAmount(p.target_amount, p).profit
+        : null;
+
     const targetPoint =
         p.target_amount > 0 && p.target_amount <= p.max_amount
             ? [{ value: [p.target_amount, targetProfit] }]
             : [];
+
+    updateSummary(p, breakEvenPointsRaw, targetProfit);
 
     const fromCountry = p.from_country;
     const toCountry = p.to_country;
