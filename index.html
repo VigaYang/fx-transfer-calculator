@@ -6,10 +6,10 @@
     <title>FX Transfer Profit Calculator</title>
     <link rel="stylesheet" href="style.css">
 
-    <!-- ECharts -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script> -->
+    <!-- Load ECharts locally -->
     <script src="echarts.min.js"></script>
 </head>
+
 <body>
     <div class="page">
         <h1>FX Transfer Profit Calculator</h1>
@@ -18,6 +18,7 @@
         </p>
 
         <div class="input-panel">
+
             <label>From Country:
                 <input id="from_country" type="text" value="From Country">
             </label>
@@ -50,7 +51,7 @@
                 <input id="max_cap" type="number" value="260">
             </label>
 
-            <label>Fixed Transfer Fee:
+            <label>Fixed Transfer Fee (From currency):
                 <input id="fixed_fee" type="number" value="150">
             </label>
 
@@ -58,7 +59,7 @@
                 <input id="to_fee" type="number" value="20">
             </label>
 
-            <label>Max X Value:
+            <label>Max Amount (To currency):
                 <input id="max_amount" type="number" value="100000">
             </label>
 
@@ -66,16 +67,18 @@
                 <input id="x_tick_step" type="number" value="5000">
             </label>
 
-            <label>Target Amount:
+            <label>Target Amount (To currency):
                 <input id="target_amount" type="number" value="20000">
             </label>
 
             <button id="updateBtn">Update Chart</button>
+
         </div>
 
         <div id="chart" class="chart"></div>
     </div>
 
+    <!-- Your main logic -->
     <script src="script.js"></script>
 </body>
 </html>
