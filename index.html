@@ -18,7 +18,6 @@
         </p>
 
         <div class="input-panel">
-
             <label>From Country:
                 <input id="from_country" type="text" value="From Country">
             </label>
@@ -72,13 +71,37 @@
             </label>
 
             <button id="updateBtn">Update Chart</button>
+        </div>
 
+        <div class="summary-panel">
+            <div class="summary-header">
+                <h2>Result Summary</h2>
+                <div id="summaryStatus" class="summary-status neutral">Ready</div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Target amount</div>
+                    <div id="summaryTargetAmount" class="summary-value">-</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">Profit at target</div>
+                    <div id="summaryTargetProfit" class="summary-value">-</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">First breakeven</div>
+                    <div id="summaryBreakeven" class="summary-value">-</div>
+                </div>
+            </div>
+
+            <p id="summaryNote" class="summary-note"></p>
         </div>
 
         <div id="chart" class="chart"></div>
     </div>
 
-    <!-- Your main logic -->
     <script src="script.js"></script>
 </body>
 </html>
